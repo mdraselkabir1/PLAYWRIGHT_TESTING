@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(jq -e '.hooks.PreToolUse[] | select\\(.matcher == \"\"Read|Grep\"\"\\) | .hooks[] | select\\(.type == \"\"command\"\"\\) | .command' /Users/rasel/Downloads/PROJECTS/PLAYWRIGHT_PROJECT/.claude/settings.json)",
+      "Bash(jq -e '.hooks.PreToolUse[] | select\\(.matcher == \"\"Write|Edit\"\"\\) | .hooks[] | select\\(.type == \"\"command\"\"\\) | .command' /Users/rasel/Downloads/PROJECTS/PLAYWRIGHT_PROJECT/.claude/settings.json)"
+    ]
+  }
+}

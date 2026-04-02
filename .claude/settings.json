@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -e 'if .tool_name == \"Read\" then (.tool_input.file_path | contains(\"node_modules\")) elif .tool_name == \"Grep\" then ((.tool_input.path // \"\") | contains(\"node_modules\")) or (.tool_input.pattern | contains(\"node_modules\")) else false end' > /dev/null 2>&1 && echo '{\"continue\": false, \"stopReason\": \"⛔ Cannot read or grep node_modules folder. This folder is excluded to save tokens and improve performance. If you need to find something in the project, search in @pages/, @locators/, @tests/, or other source directories instead.\"}' || echo '{\"continue\": true}'",
+            "statusMessage": "Checking for node_modules access"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(jq -r '.tool_input.file_path // .tool_response.filePath' 2>/dev/null); case \"$FILE\" in *@pages/*.ts) DUPS=$(grep -h \"async \" ./@pages/*.ts 2>/dev/null | grep -oE \"async [a-zA-Z_][a-zA-Z0-9_]*\" | sort | uniq -d | sed 's/async //' | paste -sd ',' - 2>/dev/null); if [ -n \"$DUPS\" ]; then echo \"{\\\"hookSpecificOutput\\\": {\\\"hookEventName\\\": \\\"PreToolUse\\\", \\\"additionalContext\\\": \\\"⚠️ Duplicate methods in @pages/: $DUPS\\n\\nReuse existing implementations to follow DRY principle.\\\"}}\"; fi;; *@locators/*.ts) DUPS=$(grep -h \"get \" ./@locators/*.ts 2>/dev/null | grep -oE \"get [a-zA-Z_][a-zA-Z0-9_]*\" | sort | uniq -d | sed 's/get //' | paste -sd ',' - 2>/dev/null); if [ -n \"$DUPS\" ]; then echo \"{\\\"hookSpecificOutput\\\": {\\\"hookEventName\\\": \\\"PreToolUse\\\", \\\"additionalContext\\\": \\\"⚠️ Duplicate locators in @locators/: $DUPS\\n\\nConsolidate to maintain single source of truth.\\\"}}\"; fi;; esac; echo '{\"continue\": true}'",
+            "statusMessage": "Checking for duplicate methods and locators"
+          }
+        ]
+      }
+    ]
+  }
+}
