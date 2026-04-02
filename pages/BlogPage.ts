@@ -11,7 +11,7 @@ export class BlogPage {
   }
 
   async goto() {
-    await this.page.goto('https://www.dsinnovators.com/blog');
+    await this.page.goto('/blog');
   }
 
   async getPostCount() {

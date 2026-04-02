@@ -11,7 +11,7 @@ export class HomePage {
   }
 
   async goto() {
-    await this.page.goto('https://www.dsinnovators.com/');
+    await this.page.goto('/');
   }
 
   async getTitle() {
