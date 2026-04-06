@@ -262,8 +262,8 @@ await page.clickButton('Submit');
 ## Output Options
 
 The skill provides:
-- **Specific locations**: Line numbers for changes
-- **Before/After examples**: Clear code comparisons
+- **Specific Locations**: Line numbers for changes
+- **Before/After Examples**: Clear code comparisons
 - **Rationale**: Why this improvement matters
 - **Implementation guide**: How to make the change
 - **Impact analysis**: What improves (performance, readability, etc.)
