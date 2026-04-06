@@ -9,13 +9,15 @@ const TARGET_URL = process.env.BASE_URL || 'https://www.dsinnovators.com';
 test.describe('ZAP Full Active Security Scan', () => {
   let zap: ZapPage;
 
-  test.beforeAll({ timeout: 3 * 60 * 1000 }, async () => {
+  test.beforeAll(async () => {
+    test.setTimeout(3 * 60 * 1000);
     zap = new ZapPage();
     await zap.startZap();
   });
 
   // afterAll always runs — reports saved even if scan errors
-  test.afterAll({ timeout: 3 * 60 * 1000 }, async () => {
+  test.afterAll(async () => {
+    test.setTimeout(3 * 60 * 1000);
     await zap.saveReports('full-scan');
     await zap.stopZap();
   });

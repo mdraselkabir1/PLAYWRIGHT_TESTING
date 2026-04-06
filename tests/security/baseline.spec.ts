@@ -10,13 +10,15 @@ test.describe('ZAP Baseline Security Scan', () => {
   let zap: ZapPage;
 
   // ZAP startup can take ~60s — allow 3 minutes for the hook
-  test.beforeAll({ timeout: 3 * 60 * 1000 }, async () => {
+  test.beforeAll(async () => {
+    test.setTimeout(3 * 60 * 1000);
     zap = new ZapPage();
     await zap.startZap();
   });
 
   // afterAll always runs — reports are saved even if the test errors
-  test.afterAll({ timeout: 3 * 60 * 1000 }, async () => {
+  test.afterAll(async () => {
+    test.setTimeout(3 * 60 * 1000);
     await zap.saveReports('baseline');
     await zap.stopZap();
   });
