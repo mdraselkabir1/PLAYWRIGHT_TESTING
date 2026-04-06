@@ -23,17 +23,54 @@ export class ZapPage {
   // ── Lifecycle ──────────────────────────────────────────────────────────────
 
   async startZap(): Promise<void> {
-    execSync(
-      `docker run -d --name ${ZapLocators.CONTAINER_NAME} ` +
-      `-p ${ZapLocators.PROXY_PORT}:${ZapLocators.PROXY_PORT} ` +
-      `${ZapLocators.ZAP_IMAGE} ` +
-      `zap.sh -daemon -host 0.0.0.0 -port ${ZapLocators.PROXY_PORT} ` +
-      `-config api.addrs.addr.name=.* ` +
-      `-config api.addrs.addr.regex=true ` +
-      `-config api.key=${ZapLocators.API_KEY}`,
-      { stdio: 'pipe' }
-    );
+    // Reuse an already-running ZAP instance — avoids the ~100s startup cost
+    if (await this.isZapReady()) {
+      console.log('ZAP is already running — skipping container start.');
+      return;
+    }
+
+    // Clean up any stopped/crashed container with the same name
+    try {
+      execSync(`docker rm -f ${ZapLocators.CONTAINER_NAME} 2>/dev/null || true`, { stdio: 'pipe' });
+    } catch { /* nothing to clean up */ }
+
+    try {
+      execSync(
+        `docker run -d --name ${ZapLocators.CONTAINER_NAME} ` +
+        `-p ${ZapLocators.PROXY_PORT}:${ZapLocators.PROXY_PORT} ` +
+        `${ZapLocators.ZAP_IMAGE} ` +
+        `zap.sh -daemon -host 0.0.0.0 -port ${ZapLocators.PROXY_PORT} ` +
+        `-config api.addrs.addr.name=.* ` +
+        `-config api.addrs.addr.regex=true ` +
+        `-config api.key=${ZapLocators.API_KEY}`,
+        { stdio: 'pipe' }
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new Error(
+        `Failed to start ZAP container. Is Docker running and is the image pulled?\n` +
+        `  docker pull ${ZapLocators.ZAP_IMAGE}\n` +
+        `Docker error: ${msg}`
+      );
+    }
+
     await this.waitForZapReady();
+  }
+
+  // Quick one-shot check: is ZAP already up and responding?
+  private async isZapReady(): Promise<boolean> {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 3000);
+      try {
+        const res = await fetch(this.apiUrl(ZapLocators.VERSION), { signal: controller.signal });
+        return res.ok;
+      } finally {
+        clearTimeout(timer);
+      }
+    } catch {
+      return false;
+    }
   }
 
   async stopZap(): Promise<void> {
@@ -49,19 +86,40 @@ export class ZapPage {
     return { server: `http://localhost:${ZapLocators.PROXY_PORT}` };
   }
 
-  // Poll until ZAP REST API responds — timeout after 2 minutes
-  private async waitForZapReady(timeoutMs = 120_000): Promise<void> {
+  // Poll until ZAP REST API responds — timeout after 4 minutes
+  private async waitForZapReady(timeoutMs = 240_000): Promise<void> {
     const deadline = Date.now() + timeoutMs;
+    let attempt = 0;
     while (Date.now() < deadline) {
+      attempt++;
+      const elapsed = Math.round((Date.now() - (deadline - timeoutMs)) / 1000);
       try {
-        const res = await fetch(this.apiUrl(ZapLocators.VERSION));
-        if (res.ok) return;
-      } catch {
-        // ZAP not ready yet
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 5000);
+        try {
+          const res = await fetch(this.apiUrl(ZapLocators.VERSION), { signal: controller.signal });
+          clearTimeout(timer);
+          console.log(`[ZAP] attempt ${attempt} (${elapsed}s): HTTP ${res.status}`);
+          if (res.ok) return;
+        } catch (fetchErr: unknown) {
+          clearTimeout(timer);
+          const name = (fetchErr as Error).name ?? 'Error';
+          console.log(`[ZAP] attempt ${attempt} (${elapsed}s): ${name} — ${(fetchErr as Error).message}`);
+        }
+      } catch (err: unknown) {
+        console.log(`[ZAP] attempt ${attempt} (${elapsed}s): unexpected error — ${(err as Error).message}`);
       }
       await new Promise(r => setTimeout(r, 3000));
     }
-    throw new Error('ZAP did not become ready within 2 minutes. Is Docker running?');
+    // Dump logs before throwing so the error is actionable
+    let logs = '';
+    try { logs = execSync(`docker logs --tail 40 ${ZapLocators.CONTAINER_NAME}`, { stdio: 'pipe' }).toString(); } catch { /* ignore */ }
+    throw new Error(
+      `ZAP did not become ready within ${timeoutMs / 1000}s.\n` +
+      `Make sure Docker is running and the image is pulled:\n` +
+      `  docker pull ${ZapLocators.ZAP_IMAGE}\n` +
+      (logs ? `Last container logs:\n${logs}` : '')
+    );
   }
 
   // ── Navigation ─────────────────────────────────────────────────────────────

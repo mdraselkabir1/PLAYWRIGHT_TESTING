@@ -9,8 +9,9 @@ const TARGET_URL = process.env.BASE_URL || 'https://www.dsinnovators.com';
 test.describe('ZAP API / AJAX Spider Security Scan', () => {
   let zap: ZapPage;
 
+  // ZAP startup can take ~3 min on first run — allow 5 minutes for the hook
   test.beforeAll(async () => {
-    test.setTimeout(3 * 60 * 1000);
+    test.setTimeout(5 * 60 * 1000);
     zap = new ZapPage();
     await zap.startZap();
   });

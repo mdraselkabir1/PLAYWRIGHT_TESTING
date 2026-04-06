@@ -62,7 +62,7 @@ Security tests are in `tests/security/` and are kept **separate from functional 
 
 ### How it works
 
-1. ZAP starts as a Docker container (`softwaresecurityproject/zap2docker-stable`) with its proxy on port `8080`
+1. ZAP starts as a Docker container (`ghcr.io/zaproxy/zaproxy:stable`) with its proxy on port `8080`
 2. Playwright launches a browser routed through the ZAP proxy
 3. The test navigates all pages (Home → Services → Blog → Contact) — ZAP records all traffic
 4. ZAP performs its scan on the recorded traffic
@@ -83,7 +83,7 @@ docker ps            # verify Docker daemon is running
 The ZAP Docker image is pulled automatically on first run (~500MB):
 
 ```bash
-docker pull softwaresecurityproject/zap2docker-stable
+docker pull ghcr.io/zaproxy/zaproxy:stable
 ```
 
 ### Scan Types

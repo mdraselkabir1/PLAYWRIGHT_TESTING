@@ -9,9 +9,9 @@ const TARGET_URL = process.env.BASE_URL || 'https://www.dsinnovators.com';
 test.describe('ZAP Baseline Security Scan', () => {
   let zap: ZapPage;
 
-  // ZAP startup can take ~60s — allow 3 minutes for the hook
+  // ZAP startup can take ~3 min on first run — allow 5 minutes for the hook
   test.beforeAll(async () => {
-    test.setTimeout(3 * 60 * 1000);
+    test.setTimeout(15 * 60 * 1000);
     zap = new ZapPage();
     await zap.startZap();
   });
@@ -20,7 +20,7 @@ test.describe('ZAP Baseline Security Scan', () => {
   test.afterAll(async () => {
     test.setTimeout(3 * 60 * 1000);
     await zap.saveReports('baseline');
-    await zap.stopZap();
+    // await zap.stopZap();
   });
 
   // Baseline: spider + passive scan. Allow 15 minutes.

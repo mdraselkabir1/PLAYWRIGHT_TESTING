@@ -2,7 +2,7 @@
 
 export class ZapLocators {
   // Docker
-  static readonly ZAP_IMAGE = 'softwaresecurityproject/zap2docker-stable';
+  static readonly ZAP_IMAGE = 'ghcr.io/zaproxy/zaproxy:stable';
   static readonly CONTAINER_NAME = 'zap-container';
   static readonly PROXY_PORT = 8080;
   static readonly API_KEY = 'zapkey';
