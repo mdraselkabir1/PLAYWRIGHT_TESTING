@@ -6,7 +6,13 @@ export class ZapLocators {
   static readonly CONTAINER_NAME = 'zap-container';
   static readonly PROXY_PORT = 8080;
   static readonly API_KEY = 'zapkey';
-  static readonly API_BASE = 'http://localhost:8080';
+  static readonly API_BASE = `http://localhost:${ZapLocators.PROXY_PORT}`;
+
+  // Timing
+  static readonly STARTUP_TIMEOUT_MS = 240_000;
+  static readonly SCAN_TIMEOUT_MS = 300_000;
+  static readonly POLL_INTERVAL_MS = 5_000;
+  static readonly FETCH_TIMEOUT_MS = 5_000;
 
   // Startup
   static readonly VERSION = '/JSON/core/view/version/';

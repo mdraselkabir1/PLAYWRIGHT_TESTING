@@ -87,27 +87,23 @@ export class ZapPage {
   }
 
   // Poll until ZAP REST API responds — timeout after 4 minutes
-  private async waitForZapReady(timeoutMs = 240_000): Promise<void> {
+  private async waitForZapReady(timeoutMs = ZapLocators.STARTUP_TIMEOUT_MS): Promise<void> {
     const deadline = Date.now() + timeoutMs;
     let attempt = 0;
     while (Date.now() < deadline) {
       attempt++;
       const elapsed = Math.round((Date.now() - (deadline - timeoutMs)) / 1000);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), ZapLocators.FETCH_TIMEOUT_MS);
       try {
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 5000);
-        try {
-          const res = await fetch(this.apiUrl(ZapLocators.VERSION), { signal: controller.signal });
-          clearTimeout(timer);
-          console.log(`[ZAP] attempt ${attempt} (${elapsed}s): HTTP ${res.status}`);
-          if (res.ok) return;
-        } catch (fetchErr: unknown) {
-          clearTimeout(timer);
-          const name = (fetchErr as Error).name ?? 'Error';
-          console.log(`[ZAP] attempt ${attempt} (${elapsed}s): ${name} — ${(fetchErr as Error).message}`);
-        }
+        const res = await fetch(this.apiUrl(ZapLocators.VERSION), { signal: controller.signal });
+        console.log(`[ZAP] attempt ${attempt} (${elapsed}s): HTTP ${res.status}`);
+        if (res.ok) return;
       } catch (err: unknown) {
-        console.log(`[ZAP] attempt ${attempt} (${elapsed}s): unexpected error — ${(err as Error).message}`);
+        const name = (err as Error).name ?? 'Error';
+        console.log(`[ZAP] attempt ${attempt} (${elapsed}s): ${name} — ${(err as Error).message}`);
+      } finally {
+        clearTimeout(timer);
       }
       await new Promise(r => setTimeout(r, 3000));
     }
@@ -144,6 +140,24 @@ export class ZapPage {
     await page.waitForLoadState('networkidle');
   }
 
+  // ── Polling helper ─────────────────────────────────────────────────────────
+
+  private async pollUntilComplete(
+    endpoint: string,
+    params: Record<string, string>,
+    doneCondition: (json: { status: string }) => boolean,
+    timeoutMs = ZapLocators.SCAN_TIMEOUT_MS,
+  ): Promise<void> {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      const res = await fetch(this.apiUrl(endpoint, params));
+      const json = await res.json() as { status: string };
+      if (doneCondition(json)) return;
+      await new Promise(r => setTimeout(r, ZapLocators.POLL_INTERVAL_MS));
+    }
+    throw new Error(`Scan did not complete within ${timeoutMs / 1000}s`);
+  }
+
   // ── Baseline scan (spider + passive) ──────────────────────────────────────
 
   async runBaselineScan(target: string): Promise<string> {
@@ -153,12 +167,7 @@ export class ZapPage {
   }
 
   async waitForSpiderComplete(scanId: string): Promise<void> {
-    while (true) {
-      const res = await fetch(this.apiUrl(ZapLocators.SPIDER_STATUS, { scanId }));
-      const json = await res.json() as { status: string };
-      if (json.status === '100') return;
-      await new Promise(r => setTimeout(r, 5000));
-    }
+    await this.pollUntilComplete(ZapLocators.SPIDER_STATUS, { scanId }, j => j.status === '100');
   }
 
   // ── Full scan (spider + active attack) ────────────────────────────────────
@@ -175,27 +184,18 @@ export class ZapPage {
   }
 
   async waitForActiveScanComplete(scanId: string): Promise<void> {
-    while (true) {
-      const res = await fetch(this.apiUrl(ZapLocators.ASCAN_STATUS, { scanId }));
-      const json = await res.json() as { status: string };
-      if (json.status === '100') return;
-      await new Promise(r => setTimeout(r, 5000));
-    }
+    await this.pollUntilComplete(ZapLocators.ASCAN_STATUS, { scanId }, j => j.status === '100');
   }
 
   // ── API / AJAX spider scan ─────────────────────────────────────────────────
 
   async runApiScan(target: string): Promise<void> {
-    await fetch(this.apiUrl(ZapLocators.AJAX_SPIDER_SCAN, { url: target }));
+    const res = await fetch(this.apiUrl(ZapLocators.AJAX_SPIDER_SCAN, { url: target }));
+    if (!res.ok) throw new Error(`AJAX spider failed to start: HTTP ${res.status}`);
   }
 
   async waitForAjaxSpiderComplete(): Promise<void> {
-    while (true) {
-      const res = await fetch(this.apiUrl(ZapLocators.AJAX_SPIDER_STATUS));
-      const json = await res.json() as { status: string };
-      if (json.status === 'stopped') return;
-      await new Promise(r => setTimeout(r, 5000));
-    }
+    await this.pollUntilComplete(ZapLocators.AJAX_SPIDER_STATUS, {}, j => j.status === 'stopped');
   }
 
   // ── Reports ────────────────────────────────────────────────────────────────
