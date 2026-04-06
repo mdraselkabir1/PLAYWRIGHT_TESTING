@@ -20,7 +20,7 @@ test.describe('ZAP Baseline Security Scan', () => {
   test.afterAll(async () => {
     test.setTimeout(3 * 60 * 1000);
     await zap.saveReports('baseline');
-    // await zap.stopZap();
+    await zap.stopZap();
   });
 
   // Baseline: spider + passive scan. Allow 15 minutes.

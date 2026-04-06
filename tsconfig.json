@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "types": ["node"],
+    "ignoreDeprecations": "6.0",
+    "noEmit": true
+  },
+  "include": ["pages/**/*.ts", "locators/**/*.ts", "tests/**/*.ts", "*.ts"]
+}

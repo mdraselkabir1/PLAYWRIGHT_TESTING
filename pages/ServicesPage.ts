@@ -23,6 +23,6 @@ export class ServicesPage {
   }
 
   async isServiceDetail() {
-    return this.page.url().then(url => /services\//i.test(url));
+    return /services\//i.test(this.page.url());
   }
 }

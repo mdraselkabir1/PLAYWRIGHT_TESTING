@@ -1,4 +1,26 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(git check-ignore:*)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(git -C /Users/rasel/Downloads/PROJECTS/PLAYWRIGHT/PLAYWRIGHT_TESTING branch --show-current)",
+      "Bash(/Users/rasel/Downloads/PROJECTS/PLAYWRIGHT/PLAYWRIGHT_TESTING/node_modules/.bin/tsc --noEmit)",
+      "Bash(echo \"Exit: $?\")",
+      "Bash(tsc --version)",
+      "Bash(npm install:*)",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(node_modules/.bin/tsc --noEmit --target es2020 --module commonjs --moduleResolution node --esModuleInterop true --strict true --skipLibCheck true pages/ZapPage.ts)",
+      "Bash(node_modules/.bin/tsc --noEmit --target es2020 --module commonjs --moduleResolution bundler --esModuleInterop true --strict true --skipLibCheck true --ignoreDeprecations 6.0 pages/ZapPage.ts)",
+      "Bash(node_modules/.bin/tsc --noEmit --target es2020 --module commonjs --moduleResolution bundler --esModuleInterop true --strict true --skipLibCheck true --ignoreDeprecations 6.0 --types node pages/ZapPage.ts)",
+      "Bash(node -e \"const pw = require\\(''''@playwright/test''''\\); console.log\\(pw.test.beforeAll.toString\\(\\).slice\\(0,300\\)\\);\")",
+      "Bash(echo \"Exit code: $?\")",
+      "Bash(docker ps:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:8080/JSON/core/view/version/?apikey=zapkey\")",
+      "Bash(curl -s \"http://localhost:8080/JSON/core/view/version/?apikey=zapkey\")",
+      "Bash(node -e \":*)",
+      "Bash(echo \"HTTP_PROXY=$HTTP_PROXY HTTPS_PROXY=$HTTPS_PROXY http_proxy=$http_proxy https_proxy=$https_proxy NO_PROXY=$NO_PROXY\")"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
