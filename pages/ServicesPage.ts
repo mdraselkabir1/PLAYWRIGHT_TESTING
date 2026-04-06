@@ -11,7 +11,7 @@ export class ServicesPage {
   }
 
   async goto() {
-    await this.page.goto('https://www.dsinnovators.com/services');
+    await this.page.goto('/services');
   }
 
   async getServiceCount() {
@@ -23,6 +23,6 @@ export class ServicesPage {
   }
 
   async isServiceDetail() {
-    return this.page.url().then(url => /services\//i.test(url));
+    return /services\//i.test(this.page.url());
   }
 }

@@ -1,0 +1,41 @@
+// tests/security/api-scan.spec.ts
+
+import { test } from '@playwright/test';
+import { chromium } from '@playwright/test';
+import { ZapPage } from '../../pages/ZapPage';
+
+const TARGET_URL = process.env.BASE_URL || 'https://www.dsinnovators.com';
+
+test.describe('ZAP API / AJAX Spider Security Scan', () => {
+  let zap: ZapPage;
+
+  // ZAP startup can take ~3 min on first run — allow 5 minutes for the hook
+  test.beforeAll(async () => {
+    test.setTimeout(5 * 60 * 1000);
+    zap = new ZapPage();
+    await zap.startZap();
+  });
+
+  // afterAll always runs — reports saved even if scan errors
+  test.afterAll(async () => {
+    test.setTimeout(3 * 60 * 1000);
+    await zap.saveReports('api-scan');
+    await zap.stopZap();
+  });
+
+  // AJAX spider: discovers JS-rendered content and API endpoints. Allow 30 minutes.
+  test('navigate site through ZAP proxy and run AJAX spider scan', async () => {
+    test.setTimeout(30 * 60 * 1000);
+
+    const browser = await chromium.launch({ proxy: zap.getProxyConfig() });
+    const context = await browser.newContext({ ignoreHTTPSErrors: true });
+    const page = await context.newPage();
+
+    await zap.navigateAllPages(page);
+
+    await zap.runApiScan(TARGET_URL);
+    await zap.waitForAjaxSpiderComplete();
+
+    await browser.close();
+  });
+});

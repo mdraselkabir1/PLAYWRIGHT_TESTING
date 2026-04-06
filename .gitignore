@@ -1,0 +1,15 @@
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+# Local environment overrides (never commit real env files)
+.env
+
+# ZAP security scan reports (ignore generated report files, keep directory)
+/security-reports/*
+!/security-reports/.gitkeep

@@ -11,7 +11,7 @@ export class ContactPage {
   }
 
   async goto() {
-    await this.page.goto('https://www.dsinnovators.com/contact');
+    await this.page.goto('/contact');
   }
 
   async fillForm(name: string, email: string, message: string) {
