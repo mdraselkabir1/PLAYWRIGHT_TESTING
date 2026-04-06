@@ -10,5 +10,6 @@ node_modules/
 # Local environment overrides (never commit real env files)
 .env
 
-# ZAP security scan reports
-/security-reports/
+# ZAP security scan reports (ignore generated report files, keep directory)
+/security-reports/*
+!/security-reports/.gitkeep
